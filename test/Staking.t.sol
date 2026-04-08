@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
 import "src/staking.sol";
@@ -36,6 +36,11 @@ contract StakingTest is Test {
         stakeToken.approve(address(staking), type(uint256).max);
         staking.addTokenRewards(20000e6);
         assertEq(stakeToken.balanceOf(address(staking)), 20000e6);
+
+        vm.stopPrank();
+
+        vm.prank(alice);
+        stakeToken.approve(address(staking), type(uint256).max);
     }
 
     function test_onlyOwner_can_add_token_rewards() public {
@@ -44,7 +49,6 @@ contract StakingTest is Test {
         stakeToken.approve(address(staking), 1e18);
         vm.expectRevert(Staking.NotOwner.selector);
         staking.addTokenRewards(1e6);
-
     }
 
     function test_stakeETH_success() public {
@@ -56,12 +60,31 @@ contract StakingTest is Test {
         staking.stakeEth{value: 1 ether}();
 
         Staking.ethStakeInfo memory stake;
-        (, stake.amountStaked,,) = staking.userEthStakeInfo(alice);
+        (, stake.amountStaked, , ) = staking.userEthStakeInfo(alice);
         assertEq(stake.amountStaked, 1 ether);
-        
+
         // assume alice tries to stake again
-       vm.expectRevert(Staking.AlreadyStaked.selector);
-       staking.stakeEth{value: 1 ether}();
+        vm.expectRevert(Staking.AlreadyStaked.selector);
+        staking.stakeEth{value: 1 ether}();
+    }
+
+    function test_stakeERC20_success() public {
+        vm.startPrank(alice);
+        // alice attempts to stake less than min ERC20 stake
+        vm.expectRevert(Staking.InvalidAmount.selector);
+        staking.stakeErc20(1e2);
+
+        stakeToken.approve(address(staking), type(uint256).max);
+
+        staking.stakeErc20(1e6);
+
+        Staking.erc20StakeInfo memory stake;
+        (, stake.amountStaked, , ) = staking.userTokenStakeInfo(alice);
+        assertEq(stake.amountStaked, 1e6);
+
+        // assume alice tries to stake again
+        vm.expectRevert(Staking.AlreadyStaked.selector);
+        staking.stakeErc20(1e6);
     }
 
     function test_stakeETH_success_fuzz(uint256 _amount) public {
@@ -77,12 +100,8 @@ contract StakingTest is Test {
         test_stakeETH_success();
         vm.expectRevert(Staking.StakeNotEnded.selector);
         staking.unstake(true);
-`
         vm.warp(staking.stakeEndTime() + 1);
         // skip(10 days);
         staking.unstake(true);
-
     }
-
-
 }
