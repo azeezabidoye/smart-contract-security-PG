@@ -140,9 +140,8 @@ contract Staking {
             erc20StakeInfo storage _stake = userTokenStakeInfo[msg.sender];
             _userStakeDuration = stakeEndTime - _stake.lastStakeTime;
             _userShares =
-                ((_userStakeDuration * _stake.amountStaked) /
-                    totalTokenStaked) *
-                DURATION;
+                (_userStakeDuration * _stake.amountStaked) /
+                (totalTokenStaked * DURATION);
             reward = _userShares * tokenRewardAvailable;
         }
     }

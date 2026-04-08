@@ -113,4 +113,15 @@ contract StakingTest is Test {
         // skip(10 days);
         staking.unstake(true);
     }
+
+    function test_unstake_erc20() public {
+        // test_stakeERC20_success();
+        vm.startPrank(alice);
+        staking.stakeErc20(200e6);
+        vm.expectRevert(Staking.StakeNotEnded.selector);
+        staking.unstake(false);
+        vm.warp(staking.stakeEndTime() + 1);
+        // skip(10 days);
+        staking.unstake(false);
+    }
 }
