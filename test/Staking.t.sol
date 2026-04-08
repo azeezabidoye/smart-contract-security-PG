@@ -96,6 +96,15 @@ contract StakingTest is Test {
         staking.stakeEth{value: _amount}();
     }
 
+    function test_stakeERC20_success_fuzz(uint256 _amount) public {
+        vm.startPrank(alice);
+        // vm.assume(_amount > 1e4);
+        _amount = bound(_amount, 1e5, type(uint64).max - 1e6);
+        deal(address(stakeToken), alice, _amount);
+
+        staking.stakeErc20(_amount);
+    }
+
     function test_unstake_eth() public {
         test_stakeETH_success();
         vm.expectRevert(Staking.StakeNotEnded.selector);
