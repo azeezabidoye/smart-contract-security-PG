@@ -97,7 +97,7 @@ contract Staking {
         if (isEth) {
             ethStakeInfo storage _stake = userEthStakeInfo[msg.sender];
             uint256 _amount = _stake.amountStaked;
-            require(_amount >= 0, InvalidAmount());
+            require(_amount > 0, InvalidAmount());
             require(!_stake.withdrawn, AlreadyWithdrawn());
             _stake.withdrawn = true;
             _reward = _caluculateRewardClaimable(_amount, true);
@@ -109,7 +109,7 @@ contract Staking {
         } else {
             erc20StakeInfo storage _stake = userTokenStakeInfo[msg.sender];
             uint256 _amount = _stake.amountStaked;
-            require(_amount >= 0, InvalidAmount());
+            require(_amount > 0, InvalidAmount());
             require(!_stake.withdrawn, AlreadyWithdrawn());
             _stake.withdrawn = true;
             _reward = _caluculateRewardClaimable(_amount, false);
